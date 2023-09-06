@@ -1,34 +1,73 @@
-from flask import Flask, render_template, redirect, request, url_for, flash,session
+from flask import Flask, render_template, redirect, request,flash,session
 from flask_debugtoolbar import DebugToolbarExtension
-from surveys import satisfaction_survey 
+from surveys import satisfaction_survey as survey
+
+RESPONSES_KEY = "responses"
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "secret"
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 
 debug = DebugToolbarExtension(app)
 
-responses = []
 
 
 @app.route('/')
-def index():
-    return render_template('survey.html', survey=satisfaction_survey)
+def show_survey_start():
+    """Show the survey start page"""
 
-@app.route('/questions/<int:question_idx>', methods=['GET', 'POST'])
-def question(question_idx):
-    if question_idx == len(satisfaction_survey.questions):
-        return redirect('/thankyou')
+    return render_template('survey.html', survey=survey)
+
+@app.route("/begin", methods= ["POST"])
+def start_survey():
+    """Clear any responses."""
+
+    session[RESPONSES_KEY] = []
+
+    return redirect("/questions/0")
+
+
+@app.route('/answer', methods = ["POST"])
+def handle_question():
+    """Save answer and move to next question"""
+
+
+    choice = request.form['answer']
+
+    # Adding responses to session
+    responses = session[RESPONSES_KEY]
+    responses.append(choice)
+    session[RESPONSES_KEY] = responses
+
+    if (len(responses) == len(survey.questions)):
+        return redirect("/thankyou")
     
-    if request.method == 'POST':
-        response = request.form['response']
-        responses.append(response)
+    else:
+        return redirect(f"/questions/{len(responses)}")
+    
 
-    question = satisfaction_survey.questions[question_idx]
-    return render_template('survey.html', survey=satisfaction_survey, question=question, question_idx=question_idx)
+
+@app.route('/questions/<int:question_idx>')
+def show_question(question_idx):
+    """Show questions"""
+    responses = session.get(RESPONSES_KEY)
+
+    if (responses is None):
+        return redirect('/')
+    
+    if (len(responses) == len(survey.questions)):
+         return redirect("/thankyou")
+    
+    if (len(responses) != question_idx):
+        flash(f"Invalid question id: {question_idx}.")
+        return redirect(f"/questions/{len(responses)}")
+      
+    question = survey.questions[question_idx]
+    return render_template('question.html', question=question, question_idx=question_idx)
+
 
 @app.route('/thankyou')
 def thankyou():
+    """Survey completion  page"""
     return "Thank you for completing the survey!"
 
-if __name__ == '__main__':
-    app.run(debug=True)

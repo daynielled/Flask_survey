@@ -1,21 +1,11 @@
 {% extends "base.html" %}
 {%block content%}
-<h1>{{survey.title}}</h1>
+<h1>{{ survey.title }}</h1>
 
 <p> {{ survey.instructions }} </p>
 
-<form method="POST" action= " {{ url_for('question', question_idx=question=idx) }} ">
-    <label for="response">{{question.question}} </label>
-    {% if question.choice%}
-    <select name="response" id="response">
-        {% for choice in question.choices %}
-        <option value="{{ choice }}">{{choice}} </option>
-        {% endfor %}
-    </select>
-    {% else %}
-    <input type="text" name="response" id="response" {% if not a question.allow_text %}required{% endif %}>
-    {% endif %}
-    <button type="submit">Next</button>
+<form action="/begin" method="POST">
+    <button>Start!</button>
 </form>
 {%endblock%}
 

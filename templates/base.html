@@ -1,18 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-   <title>{% block title%}Survey App{%endblock%} </title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask Survey</title>
 </head>
 <body>
-    <header>
-        <h1>
-            {% block header%}
-            {%endblock%}
-        </h1>
-    </header>
-    <main>
-        {% block content%}{%endblock%}
-    </main>
-
+    {% for msg in get_flashed_messages() %}
+    <p>{{ msg }}</p>
+    {% endfor %}
+    {% block content %}
+    {%endblock%}
 </body>
 </html>
+
